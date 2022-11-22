@@ -1,0 +1,16 @@
+{
+  "name": "retool",
+  "version": "1.0.0",
+  "description": "Cloud-Hosted",
+  "main": "index.js",
+  "scripts": {
+    "start": "ngrok http 8080",
+    "start:lt": "lt --port 8080",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "localtunnel": "^2.0.2"
+  }
+}
