@@ -36,9 +36,9 @@ import { DataProvider, fetchUtils } from "ra-core";
 export default (
   apiUrl: string,
   httpClient = fetchUtils.fetchJson,
-  countHeader: string = "Content-Range"
+  countHeader?: string
 ): DataProvider => ({
-  getList: (resource, params) => {
+  getList: async (resource, params) => {
     const { page, perPage } = params.pagination;
     const { field, order } = params.sort;
 
@@ -50,31 +50,25 @@ export default (
       range: JSON.stringify([rangeStart, rangeEnd]),
       filter: JSON.stringify(params.filter),
     };
-    const url = `${apiUrl}/${resource}?${stringify(query)}`;
-    const options =
-      countHeader === "Content-Range"
-        ? {
-            // Chrome doesn't return `Content-Range` header if no `Range` is provided in the request.
-            headers: new Headers({
-              Range: `${resource}=${rangeStart}-${rangeEnd}`,
-            }),
-          }
-        : {};
 
-    return httpClient(url, options).then(({ headers, json }) => {
-      if (!headers.has(countHeader)) {
-        throw new Error(
-          `The ${countHeader} header is missing in the HTTP Response. The simple REST data provider expects responses for lists of resources to contain this header with the total number of results to build the pagination. If you are using CORS, did you declare ${countHeader} in the Access-Control-Expose-Headers header?`
-        );
-      }
-      return {
-        data: json,
-        total:
-          countHeader === "Content-Range"
-            ? parseInt(headers.get("content-range").split("/").pop(), 10)
-            : parseInt(headers.get(countHeader.toLowerCase())),
-      };
+    const url = `${apiUrl}/${resource}?${stringify(query)}`;
+
+    const res = await fetch(url, {
+      headers: {
+        "xc-auth":
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImZsYXZpZW5AZ2Vuc2RlY29uZmlhbmNlLmNvbSIsImZpcnN0bmFtZSI6bnVsbCwibGFzdG5hbWUiOm51bGwsImlkIjoidXNfeDB4b2V6dXhjOHNoZDIiLCJyb2xlcyI6InVzZXIsc3VwZXIiLCJ0b2tlbl92ZXJzaW9uIjoiNDY5ODMwY2NhY2U4MTQ2MzAxNjcyMjcyNGFkYmE5MjQzNWRmOTQ2MWM1NWZjYjkxYmNmYzU5NjY3ZmM0NjY1MTc0ZmI4ZThjMmFkMmIzZTUiLCJpYXQiOjE2NjkxMTE0OTYsImV4cCI6MTY2OTE0NzQ5Nn0.SIzyICsMEahl_Zvq_PnB2czVkpaFQ0pA8fMsyjDHaKs",
+      },
     });
+
+    const jsonRes = await res.json();
+
+    return {
+      data: jsonRes.list.map(({ Id, ...itemWithoutId }: any) => ({
+        id: Id,
+        ...itemWithoutId,
+      })),
+      total: jsonRes.pageInfo.totalRows,
+    };
   },
 
   getOne: (resource, params) =>
@@ -155,26 +149,48 @@ export default (
       body: JSON.stringify(params.data),
     }).then(({ json }) => ({ data: json })),
 
-  delete: (resource, params) =>
-    httpClient(`${apiUrl}/${resource}/${params.id}`, {
+  delete: async (resource, params) => {
+    const url = `${apiUrl}/${resource}/${params.id}`;
+
+    const res = await fetch(url, {
       method: "DELETE",
-      headers: new Headers({
-        "Content-Type": "text/plain",
-      }),
-    }).then(({ json }) => ({ data: json })),
+      headers: {
+        "xc-auth":
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImZsYXZpZW5AZ2Vuc2RlY29uZmlhbmNlLmNvbSIsImZpcnN0bmFtZSI6bnVsbCwibGFzdG5hbWUiOm51bGwsImlkIjoidXNfeDB4b2V6dXhjOHNoZDIiLCJyb2xlcyI6InVzZXIsc3VwZXIiLCJ0b2tlbl92ZXJzaW9uIjoiNDY5ODMwY2NhY2U4MTQ2MzAxNjcyMjcyNGFkYmE5MjQzNWRmOTQ2MWM1NWZjYjkxYmNmYzU5NjY3ZmM0NjY1MTc0ZmI4ZThjMmFkMmIzZTUiLCJpYXQiOjE2NjkxMTE0OTYsImV4cCI6MTY2OTE0NzQ5Nn0.SIzyICsMEahl_Zvq_PnB2czVkpaFQ0pA8fMsyjDHaKs",
+      },
+    });
+
+    const jsonRes = await res.json();
+
+    console.log(jsonRes);
+    return {
+      data: [] as any,
+    };
+  },
 
   // simple-rest doesn't handle filters on DELETE route, so we fallback to calling DELETE n times instead
   deleteMany: (resource, params) =>
     Promise.all(
-      params.ids.map((id) =>
-        httpClient(`${apiUrl}/${resource}/${id}`, {
+      params.ids.map((id) => {
+        const url = `${apiUrl}/${resource}/${id}`;
+
+        return fetch(url, {
           method: "DELETE",
-          headers: new Headers({
-            "Content-Type": "text/plain",
-          }),
+          headers: {
+            "xc-auth":
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImZsYXZpZW5AZ2Vuc2RlY29uZmlhbmNlLmNvbSIsImZpcnN0bmFtZSI6bnVsbCwibGFzdG5hbWUiOm51bGwsImlkIjoidXNfeDB4b2V6dXhjOHNoZDIiLCJyb2xlcyI6InVzZXIsc3VwZXIiLCJ0b2tlbl92ZXJzaW9uIjoiNDY5ODMwY2NhY2U4MTQ2MzAxNjcyMjcyNGFkYmE5MjQzNWRmOTQ2MWM1NWZjYjkxYmNmYzU5NjY3ZmM0NjY1MTc0ZmI4ZThjMmFkMmIzZTUiLCJpYXQiOjE2NjkxMTE0OTYsImV4cCI6MTY2OTE0NzQ5Nn0.SIzyICsMEahl_Zvq_PnB2czVkpaFQ0pA8fMsyjDHaKs",
+          },
         })
-      )
+          .then((res) => res.json())
+          .then((jsonRes) => {
+            return jsonRes;
+          });
+      })
     ).then((responses) => ({
-      data: responses.map(({ json }) => json.id),
+      data: responses.map((item) => {
+        return {
+          ...item,
+        };
+      }),
     })),
 });
