@@ -1,4 +1,4 @@
-import { PostCreate, PostEdit, PostList, PostShow } from "@components/posts";
+import { MemberList } from "@components/members/list";
 import {
   ErrorComponent,
   Layout,
@@ -11,7 +11,7 @@ import routerProvider from "@pankod/refine-nextjs-router";
 import { AppProps } from "next/app";
 import dataProvider from "../src/dataProvider";
 
-const API_URL = "https://api.fake-rest.refine.dev";
+const API_URL = "http://localhost:8080/api/v1/db/data/v1/gdc-admin-poc";
 
 function MyApp({ Component, pageProps }: AppProps): JSX.Element {
   return (
@@ -24,11 +24,8 @@ function MyApp({ Component, pageProps }: AppProps): JSX.Element {
       catchAll={<ErrorComponent />}
       resources={[
         {
-          name: "posts",
-          list: PostList,
-          create: PostCreate,
-          edit: PostEdit,
-          show: PostShow,
+          name: "Members",
+          list: MemberList,
         },
       ]}
     >

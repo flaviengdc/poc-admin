@@ -10,3 +10,11 @@ export interface IPost {
   createdAt: string;
   category: { id: number };
 }
+
+export interface IMember {
+  Id: number;
+  Name: string;
+  Avatar: string;
+  CreatedAt: string;
+  UpdatedAt: string;
+}

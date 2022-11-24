@@ -126,14 +126,20 @@ const JsonServer = (
     }
 
     const { data, headers } = await httpClient.get(
-      `${url}?${stringify(query)}&${stringify(queryFilters)}`
+      `${url}?${stringify(query)}&${stringify(queryFilters)}`,
+      {
+        headers: {
+          "xc-auth":
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImZsYXZpZW5AZ2Vuc2RlY29uZmlhbmNlLmNvbSIsImZpcnN0bmFtZSI6bnVsbCwibGFzdG5hbWUiOm51bGwsImlkIjoidXNfeDB4b2V6dXhjOHNoZDIiLCJyb2xlcyI6InVzZXIsc3VwZXIiLCJ0b2tlbl92ZXJzaW9uIjoiNDY5ODMwY2NhY2U4MTQ2MzAxNjcyMjcyNGFkYmE5MjQzNWRmOTQ2MWM1NWZjYjkxYmNmYzU5NjY3ZmM0NjY1MTc0ZmI4ZThjMmFkMmIzZTUiLCJpYXQiOjE2NjkyMTAxNDQsImV4cCI6MTY2OTI0NjE0NH0.U7stqX18lov5eNIc_2NXgDXTnajwqWB2jTN71KvgZG0",
+        },
+      }
     );
 
     const total = +headers["x-total-count"];
 
     return {
-      data,
-      total,
+      data: data.list,
+      total: data.pageInfo,
     };
   },
 
@@ -182,6 +188,10 @@ const JsonServer = (
 
     const { data } = await httpClient.delete(url, {
       data: variables,
+      headers: {
+        "xc-auth":
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImZsYXZpZW5AZ2Vuc2RlY29uZmlhbmNlLmNvbSIsImZpcnN0bmFtZSI6bnVsbCwibGFzdG5hbWUiOm51bGwsImlkIjoidXNfeDB4b2V6dXhjOHNoZDIiLCJyb2xlcyI6InVzZXIsc3VwZXIiLCJ0b2tlbl92ZXJzaW9uIjoiNDY5ODMwY2NhY2U4MTQ2MzAxNjcyMjcyNGFkYmE5MjQzNWRmOTQ2MWM1NWZjYjkxYmNmYzU5NjY3ZmM0NjY1MTc0ZmI4ZThjMmFkMmIzZTUiLCJpYXQiOjE2NjkyMTAxNDQsImV4cCI6MTY2OTI0NjE0NH0.U7stqX18lov5eNIc_2NXgDXTnajwqWB2jTN71KvgZG0",
+      },
     });
 
     return {
